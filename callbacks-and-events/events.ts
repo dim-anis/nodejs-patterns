@@ -16,6 +16,11 @@ class FindRegex extends EventEmitter {
   }
 
   find() {
+    // a sync event won't register unless wrapped in .nextTick()
+    // because async event are guaranteed to not fire until next tick, so that
+    // we don't miss any events
+    process.nextTick(() => this.emit("started", this.files.toString()));
+
     for (const file of this.files) {
       fs.readFile(file, "utf8", (err, content) => {
         if (err) {
@@ -30,6 +35,7 @@ class FindRegex extends EventEmitter {
         }
       });
     }
+
     return this;
   }
 }
@@ -39,5 +45,6 @@ findHelloWorld
   .addFile("callbacks-and-events/hello.txt")
   .addFile("callbacks-and-events/world.txt")
   .find()
+  .on("started", (files) => console.log(`Started searching for ${files}`))
   .on("found", (file, elem) => console.log(`Found ${elem} in ${file}`))
   .on("error", (err) => console.error(`Error emitted ${err.message}`));
